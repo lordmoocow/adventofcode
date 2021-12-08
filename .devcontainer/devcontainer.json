@@ -26,10 +26,9 @@
 	"extensions": [
 		"vadimcn.vscode-lldb",
 		"mutantdino.resourcemonitor",
-		"matklad.rust-analyzer",
+		"rust-lang.rust",
 		"tamasfe.even-better-toml",
-		"serayuzgur.crates",
-		"rust-lang.rust"
+		"serayuzgur.crates"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
