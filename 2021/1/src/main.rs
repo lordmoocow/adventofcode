@@ -1,4 +1,4 @@
-use itertools::multizip;
+use itertools::izip;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error};
 
@@ -22,7 +22,7 @@ fn main() -> Result<(), Error> {
     let mut previous_window: Option<i32> = None;
 
     // Zip 'em all together
-    for (x, y, z) in multizip((a, b, c)) {
+    for (x, y, z) in izip!(a, b, c) {
         let window = x + y + z;
         // If we have a previous value to compare, i.e. not the first window, then do so
         if let Some(previous_window) = previous_window {
