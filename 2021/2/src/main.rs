@@ -10,10 +10,11 @@ fn main() -> Result<(), Error> {
     if let Ok(directions) = read_input("input") {
         for dir in &directions {
             sub.drive(dir);
+            println!("{:?}", sub);
         }
     }
 
-    println!("Part 1: {}", sub.location());
+    println!("{}", sub.location());
 
     Ok(())
 }
