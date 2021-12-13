@@ -5,9 +5,15 @@ use std::io::Error;
 
 fn main() -> Result<(), Error> {
     let mut system = read_input("/workspaces/advent/2021/4/input")?;
-    if let Some(board) = system.run() {
+
+    println!("Draw: {:?}", system.draw_sequence);
+    if let Some(board) = system.winner() {
         println!("{:?}", board);
-        println!("Score: {}", board.get_score());
+        println!("Winning Score: {}", board.get_score());
+    }
+    if let Some(board) = system.loser() {
+        println!("{:?}", board);
+        println!("Losing Score: {}", board.get_score());
     }
 
     Ok(())

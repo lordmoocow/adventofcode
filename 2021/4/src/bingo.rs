@@ -27,6 +27,11 @@ impl FromStr for Board {
 
 impl Board {
     pub fn mark(&mut self, number: u8) {
+        // if we have already won don't bother
+        if self.is_complete() {
+            return;
+        }
+
         let mut count_row;
         let mut count_col;
         // iterate rows/cols to find a matching number
@@ -75,8 +80,9 @@ impl Board {
 
 #[derive(Default, Debug)]
 pub struct System {
-    draw_sequence: Vec<u8>,
+    pub draw_sequence: Vec<u8>,
     boards: Vec<Board>,
+    winners: Vec<Board>,
 }
 
 impl System {
@@ -88,15 +94,26 @@ impl System {
         self.boards.push(board)
     }
 
-    pub fn run(&mut self) -> Option<Board> {
-        for draw in self.draw_sequence.iter() {
-            for board in self.boards.iter_mut() {
-                board.mark(*draw);
-                if board.is_complete() {
-                    return Some(*board);
+    pub fn winner(&mut self) -> Option<Board> {
+        self.run_draw();
+        self.winners.first().copied()
+    }
+
+    pub fn loser(&mut self) -> Option<Board> {
+        self.run_draw();
+        self.winners.last().copied()
+    }
+
+    fn run_draw(&mut self) {
+        if self.winners.is_empty() {
+            for draw in self.draw_sequence.iter() {
+                for board in self.boards.iter_mut().filter(|x|!x.is_complete()) {
+                    board.mark(*draw);
+                    if board.is_complete() {
+                        self.winners.push(*board);
+                    }
                 }
             }
         }
-        None
     }
 }
