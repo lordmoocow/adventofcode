@@ -6,6 +6,7 @@ fn main() -> Result<(), Error> {
 
     //println!("{:?}", &syntax);
     println!("{:?}", part1(&syntax));
+    println!("{:?}", part2(&syntax));
 
     Ok(())
 }
@@ -33,7 +34,34 @@ fn part1(syntax: &[String]) -> usize {
     score
 }
 
+fn part2(syntax: &[String]) -> usize {
+    let mut score = Vec::default();
 
+    // copy-paste because i'm lazy...
+    let mut tmp = Vec::default();
+    'line: for line in syntax {
+        tmp.clear();
+        for x in line.chars() {
+            match x {
+                '(' | '[' | '{' | '<' => tmp.push(Chunk::from(Symbol::from(x))),
+                ')' | ']' | '}' | '>' => {
+                    if let Some(chunk) = tmp.pop() {
+                        if !chunk.is_complete(Symbol::from(x)) {
+                            continue 'line;
+                        }
+                    }
+                },
+                _ => (),
+            }
+        }
+
+        score.push(tmp.iter().rev().fold(0, |total, chunk| {
+            (total * 5) + Symbol::score2(&chunk.kind)
+        }));
+    }
+    score.sort_unstable();
+    score[score.len()/2]
+}
 
 #[derive(Eq,PartialEq)]
 enum Symbol {
@@ -71,10 +99,20 @@ impl Symbol {
             _ => 0,
         }
     }
+
+    pub fn score2(symbol: &Self) -> usize {
+        match symbol {
+            Symbol::OpenBracket => 1,
+            Symbol::OpenSquareBracket => 2,
+            Symbol::OpenSquigglyBracket => 3,
+            Symbol::OpenAngleBracket => 4,
+            _ => 0,
+        }
+    }
 }
 
 struct Chunk {
-    kind: Symbol
+    pub kind: Symbol
 }
 
 impl Chunk {
