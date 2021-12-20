@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error};
 
 fn main() -> Result<(), Error> {
-    let caves = read_input("/workspaces/advent/2021/12/test")?;
+    let caves = read_input("/workspaces/advent/2021/12/input")?;
     let system = CaveSystem::from(caves);
     println!("{:?}", part1(&system));
 
