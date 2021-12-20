@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error};
 
 fn main() -> Result<(), Error> {
-    let caves = read_input("/workspaces/advent/2021/12/input")?;
+    let caves = read_input("/workspaces/advent/2021/12/test")?;
     let system = CaveSystem::from(caves);
     println!("{:?}", part1(&system));
 
@@ -48,7 +48,7 @@ impl CaveSystem {
     fn enter(&self) -> Vec<Vec<Cave>> {
         let mut paths = Vec::default();
         if let Some(start) = self.caves.get("start") {
-            self.explore(&start, Vec::default(), &mut paths);
+            self.explore(&start, Vec::default(), &mut paths, false);
         }
         paths
     }
@@ -58,6 +58,7 @@ impl CaveSystem {
         cave: &Cave,
         mut breadcrumbs: Vec<Cave>,
         paths: &mut Vec<Vec<Cave>>,
+        doubled_up: bool,
     ) {
         breadcrumbs.push(cave.clone());
 
@@ -70,8 +71,12 @@ impl CaveSystem {
                 .filter_map(|x| self.caves.get(x))
                 .filter(|c| !c.is_start())
             {
-                if next.is_end() || next.is_big() || !breadcrumbs.contains(&next) {
-                    self.explore(next, breadcrumbs.clone(), paths);
+                if next.is_end() || next.is_big() {
+                    self.explore(next, breadcrumbs.clone(), paths, doubled_up);
+                } else if !breadcrumbs.contains(&next) {
+                    self.explore(next, breadcrumbs.clone(), paths, doubled_up);
+                } else if !doubled_up {
+                    self.explore(next, breadcrumbs.clone(), paths, true);
                 }
             }
         }
