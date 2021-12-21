@@ -1,3 +1,6 @@
+use std::cmp::Ordering;
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::fs::File;
@@ -25,10 +28,11 @@ fn part2(risk_data: &HashMap<(isize, isize), usize>) -> usize {
         .flat_map(|((x, y), r)| {
             (0..5).flat_map(move |n| {
                 let dx = n * (max.0 + 1);
-                (0..5).map(move |nn|{
-                    let dy  =nn*(max.1 + 1);
+                (0..5).map(move |nn| {
+                    let dy = nn * (max.1 + 1);
                     (
-                        (*x + dx,*y+dy),(*r + dx as usize + dy as usize - 1) % 9 + 1
+                        (*x + dx, *y + dy),
+                        (*r + dx as usize + dy as usize - 1) % 9 + 1,
                     )
                 })
             })
@@ -38,17 +42,26 @@ fn part2(risk_data: &HashMap<(isize, isize), usize>) -> usize {
 }
 
 fn explore(map: &HashMap<(isize, isize), usize>) -> usize {
-    let mut queue = VecDeque::new();
+    let start = (0, 0);
+    let target = &map.keys().max().unwrap_or(&(0, 0));
+
+    // manhatten distance as heuristic
+    let h = |(x, y): (isize, isize)| (x - target.0 + y - target.1).abs() as usize;
+    //let h = |v| *map.get(&v).unwrap_or(&0);
+
+    let mut queue = BinaryHeap::new();
 
     // add start position to queue
-    queue.push_back((0, (0, 0)));
-    let end = &map.keys().max().unwrap_or(&(0, 0));
+    queue.push(Reverse(State {
+        c: h(start),
+        u: start,
+    }));
 
     // store the risk score to get to each point on the map
     let mut dist = HashMap::new();
 
     // take from the queue until we stop adding to it
-    while let Some((_, u)) = queue.pop_front() {
+    while let Some(Reverse(State { c: _, u })) = queue.pop() {
         // get the current score for this position (if not set we use an arbitrarily large score)
         let dist_u = *dist.entry(u).or_insert(0);
 
@@ -63,15 +76,24 @@ fn explore(map: &HashMap<(isize, isize), usize>) -> usize {
                 let dist_v = dist.entry(v).or_insert(usize::MAX);
                 if alt < *dist_v {
                     *dist_v = alt;
-                    if &&v != end {
-                        queue.push_back((alt, v))
+                    if &&v != target {
+                        queue.push(Reverse(State {
+                            c: alt + h(v),
+                            u: v,
+                        }))
                     }
                 }
             }
         }
     }
 
-    *dist.get(end).unwrap_or(&0)
+    *dist.get(target).unwrap_or(&0)
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+struct State {
+    c: usize,
+    u: (isize, isize),
 }
 
 fn read_input(path: &str) -> Result<HashMap<(isize, isize), usize>, Error> {
