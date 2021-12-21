@@ -9,13 +9,32 @@ fn main() -> Result<(), Error> {
     let risk_data = read_input("/workspaces/advent/2021/15/input")?;
     //println!("{:?}", &risk_data);
     println!("{:?}", part1(&risk_data));
+    println!("{:?}", part2(&risk_data));
 
     Ok(())
 }
 
 fn part1(risk_data: &HashMap<(isize, isize), usize>) -> usize {
-    let score = explore(&risk_data);
-    score
+    explore(&risk_data)
+}
+
+fn part2(risk_data: &HashMap<(isize, isize), usize>) -> usize {
+    let max = &risk_data.keys().max().unwrap_or(&(0, 0));
+    let risk_data: HashMap<(isize, isize), usize> = risk_data
+        .iter()
+        .flat_map(|((x, y), r)| {
+            (0..5).flat_map(move |n| {
+                let dx = n * (max.0 + 1);
+                (0..5).map(move |nn|{
+                    let dy  =nn*(max.1 + 1);
+                    (
+                        (*x + dx,*y+dy),(*r + dx as usize + dy as usize - 1) % 9 + 1
+                    )
+                })
+            })
+        })
+        .collect();
+    explore(&risk_data)
 }
 
 fn explore(map: &HashMap<(isize, isize), usize>) -> usize {
