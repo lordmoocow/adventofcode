@@ -6,7 +6,7 @@ fn main() -> Result<(), Error> {
     let (template, rules) = read_input("/workspaces/advent/2021/14/input")?;
     println!("{:?}", &template);
     println!("{:?}", part1(template.clone(), &rules));
-    println!("{:?}", part2(template.clone(), &rules));
+    println!("{:?}", part2(template, &rules));
 
     Ok(())
 }
@@ -28,9 +28,7 @@ fn polymerize(polymer: Vec<char>, rules: &HashMap<String, Rule>, steps: usize) -
         counts.entry(*element).and_modify(|v| *v += 1).or_insert(1);
     }
 
-    // add extended counts
-    let pattern_counts = polymerize_step(&polymer, rules, steps, &mut cache);
-    merge_counts(&mut counts, &pattern_counts);
+    polymerize_step(&polymer, rules, steps, &mut counts, &mut cache);
 
     // calculate score
     let mut counts: Vec<_> = counts.values().collect();
@@ -39,25 +37,24 @@ fn polymerize(polymer: Vec<char>, rules: &HashMap<String, Rule>, steps: usize) -
 }
 
 fn polymerize_step(
-    polymer: &Vec<char>,
+    polymer: &[char],
     rules: &HashMap<String, Rule>,
     steps: usize,
+    counts: &mut HashMap<char, u128>,
     cache: &mut HashMap<(String, usize), HashMap<char, u128>>,
-) -> HashMap<char, u128> {
-    let mut counts = HashMap::new();
-
+) {
     for (i, pair) in polymer.windows(2).enumerate() {
         // cache to stop going to the moon,
         // a given pair and number of iterations should always
         // produce the same additional no. of polymers
         let cache_key = (pair.iter().collect(), steps);
         if cache.contains_key(&cache_key) {
-            merge_counts(&mut counts, &cache.entry(cache_key).or_default());
+            merge_counts(counts, cache.entry(cache_key).or_default());
             continue;
         }
 
         let mut window_count = HashMap::new();
-        let mut extended_polymer = polymer.clone();
+        let mut extended_polymer = polymer.to_owned();
         if let Some(rule) = rules.get(&cache_key.0) {
             extended_polymer.insert(i + 1, rule.result);
 
@@ -68,17 +65,15 @@ fn polymerize_step(
 
             if steps > 1 {
                 let next: Vec<char> = extended_polymer[i..i + 3]
-                    .iter()
-                    .map(|x| *x)
+                    .iter().copied()
                     .collect();
-                merge_counts(&mut window_count, &polymerize_step(&next, rules, steps - 1, cache));
+                polymerize_step(&next, rules, steps - 1, &mut window_count, cache);
             }
         }
         
-        cache.insert(cache_key, window_count.clone());
-        merge_counts(&mut counts, &window_count);
+        merge_counts(counts, &window_count);
+        cache.insert(cache_key, window_count);
     }
-    counts
 }
 
 fn merge_counts(a: &mut HashMap<char, u128>, b: &HashMap<char, u128>) {
