@@ -1,5 +1,3 @@
-#![feature(slice_group_by,array_methods)]
-
 mod hydro;
 
 use crate::hydro::VentLine;
