@@ -214,6 +214,10 @@ name = "smoke-basin"
 version = "0.1.0"
 
 [[package]]
+name = "snailfish"
+version = "0.1.0"
+
+[[package]]
 name = "sonar-sweep"
 version = "0.1.0"
 dependencies = [
