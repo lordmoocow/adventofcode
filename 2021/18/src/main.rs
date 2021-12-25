@@ -12,21 +12,31 @@ fn main() -> Result<(), Error> {
     //println!("{:?}", &snailfish);
 
     println!("{:?}", part1(&snailfish));
-    // println!("{:?}", part2(&snailfish));
+    println!("{:?}", part2(&snailfish));
 
     Ok(())
 }
 
-fn part1(snailfish: &Vec<String>) -> usize {
+fn part1(snailfish: &[String]) -> usize {
     let n = process(snailfish);
     println!("{:?}", n);
     n.magnitude()
 }
 
-// fn part2(snailfish: &Vec<Number>) -> usize {
-// }
+fn part2(snailfish: &[String]) -> usize {
+    let mut max = 0;
+    for x in snailfish {
+        for y in snailfish {
+            if x != y {
+                let n = process(&[x.to_string(), y.to_string()]);
+                max = max.max(n.magnitude());
+            }
+        }
+    }
+    max
+}
 
-fn process(snailfish: &Vec<String>) -> Number {
+fn process(snailfish: &[String]) -> Number {
     let mut result: String = snailfish[0].to_owned();
 
     for s in snailfish.iter().skip(1) {
@@ -50,7 +60,10 @@ fn process(snailfish: &Vec<String>) -> Number {
                 match c {
                     '[' | ']' | ',' => {
                         match c {
-                            '[' => {depth += 1; dbuf = 0;},
+                            '[' => {
+                                depth += 1;
+                                dbuf = 0;
+                            }
                             ']' => depth -= 1,
                             _ => (),
                         }
@@ -69,11 +82,11 @@ fn process(snailfish: &Vec<String>) -> Number {
                 if depth > 4 {
                     if dbuf == 0 {
                         dbuf = i;
-                    } 
+                    }
                     continue;
                 } else if dbuf > 0 {
                     // explode!
-                    reductions.push_front((true, dbuf..i+1));
+                    reductions.push_front((true, dbuf..i + 1));
                     // queuing didn't work because the indexes change when processing
                     // could probably do something clever with slices and offsets?
                     // just break the loop instead
@@ -170,7 +183,7 @@ fn split(action: &Range<usize>, result: &str) -> String {
 fn read_input(path: &str) -> Result<Vec<String>, Error> {
     let input = read_to_string(path)?;
 
-    let input = input.split('\n').map(|s| s.to_owned()).collect();
+    let input = input.trim().split('\n').map(|s| s.to_owned()).collect();
 
     Ok(input)
 }
