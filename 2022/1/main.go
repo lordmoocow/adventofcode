@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -22,19 +23,51 @@ func check(err error) {
 	}
 }
 
-func parseInput(input []byte) []int {
-	lines := strings.Split(string(input), "\n")
-	data := make([]int, len(lines))
-	for i, line := range lines {
-		data[i], _ = strconv.Atoi(line)
+func parseInput(input []byte) [][]int {
+	groups := strings.Split(string(input), "\r\n\r\n")
+	data := make([][]int, len(groups))
+	for i, group := range groups {
+		lines := strings.Split(group, "\r\n")
+		data[i] = make([]int, len(lines))
+		for j, line := range lines {
+			data[i][j], _ = strconv.Atoi(line)
+		}
 	}
 	return data
 }
 
-func part1(data []int) int {
-	return 0
+func part1(data [][]int) int {
+	largest := 0
+	for _, calories := range data {
+		sum := 0
+		for _, c := range calories {
+			sum += c
+		}
+
+		if sum > largest {
+			largest = sum
+		}
+	}
+	return largest
 }
 
-func part2(data []int) int {
-	return 0
+func part2(data [][]int) int {
+	totals := make([]int, len(data))
+	for i, calories := range data {
+		sum := 0
+		for _, c := range calories {
+			sum += c
+		}
+		totals[i] = sum
+	}
+
+	sort.Slice(totals, func(i, j int) bool {
+		return totals[i] > totals[j]
+	})
+
+	sum := 0
+	for _, cals := range totals[:3] {
+		sum += cals
+	}
+	return sum
 }
