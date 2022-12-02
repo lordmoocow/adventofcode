@@ -11,9 +11,9 @@ type Strategy struct {
 }
 
 type ChallengeParser struct {
-	path        string
-	file        *os.File
-	scanner     *bufio.Scanner
+	path    string
+	file    *os.File
+	scanner *bufio.Scanner
 }
 
 func (cp *ChallengeParser) Close() {
@@ -30,9 +30,9 @@ func (cp *ChallengeParser) Next() *Strategy {
 
 	if cp.scanner.Scan() {
 		line := cp.scanner.Bytes()
-		return &Strategy {
-			predicted: int(line[0]) - 64, 
-			response: int(line[2]) - 87,
+		return &Strategy{
+			predicted: int(line[0]) - 64,
+			response:  int(line[2]) - 87,
 		}
 	}
 
@@ -58,7 +58,7 @@ func (c *Challenge) Part1() int {
 
 		if strategy.response == strategy.predicted {
 			score += 3
-		} else if strategy.response == (strategy.predicted % 3) + 1 {
+		} else if strategy.response == (strategy.predicted%3)+1 {
 			score += 6
 		}
 		//fmt.Printf("%v vs %v\n", string(rune(strategy.predicted+64)), string(rune(strategy.response+87)))

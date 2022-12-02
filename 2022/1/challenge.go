@@ -8,10 +8,10 @@ import (
 )
 
 type ChallengeParser struct {
-	path        string
-	file        *os.File
-	scanner     *bufio.Scanner
-	buffer      []int
+	path    string
+	file    *os.File
+	scanner *bufio.Scanner
+	buffer  []int
 }
 
 func dropCR(data []byte) []byte {
