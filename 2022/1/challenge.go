@@ -8,33 +8,34 @@ import (
 )
 
 type ChallengeParser struct {
-	path string
-	initialised bool
-	file *os.File
-	scanner bufio.Scanner
-	buffer []int
+	path        string
+	file        *os.File
+	scanner     *bufio.Scanner
+	buffer      []int
 }
 
 func dropCR(data []byte) []byte {
-  if len(data) > 0 && data[len(data)-1] == '\r' {
-    return data[0 : len(data)-1]
-  }
-  return data
+	if len(data) > 0 && data[len(data)-1] == '\r' {
+		return data[0 : len(data)-1]
+	}
+	return data
 }
 
 func (cp *ChallengeParser) Close() {
-	cp.file.Close()
+	if cp.file != nil {
+		cp.file.Close()
+	}
 }
 
 func (cp *ChallengeParser) Next() []int {
-	if !cp.initialised {
-		cp.file,_ = os.OpenFile(cp.path, os.O_RDONLY, 0666)
-		cp.scanner = *bufio.NewScanner(cp.file)
+	if cp.scanner == nil {
+		cp.file, _ = os.Open(cp.path)
+		cp.scanner = bufio.NewScanner(cp.file)
 		cp.scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 			if atEOF && len(data) == 0 {
 				return 0, nil, nil
 			}
-			if i := bytes.Index(data, []byte{'\n','\n'}); i >= 0 {
+			if i := bytes.Index(data, []byte{'\n', '\n'}); i >= 0 {
 				return i + 2, dropCR(data[0:i]), nil
 			}
 			if atEOF {
@@ -43,7 +44,6 @@ func (cp *ChallengeParser) Next() []int {
 			return 0, nil, nil
 		})
 		cp.buffer = make([]int, 0, 20)
-		cp.initialised = true
 	}
 
 	if cp.scanner.Scan() {
