@@ -14,6 +14,7 @@ type ChallengeParser struct {
 	path    string
 	file    *os.File
 	scanner *bufio.Scanner
+	current Strategy
 }
 
 func (cp *ChallengeParser) Close() {
@@ -22,21 +23,21 @@ func (cp *ChallengeParser) Close() {
 	}
 }
 
-func (cp *ChallengeParser) Next() *Strategy {
+func (cp *ChallengeParser) Next() bool {
 	if cp.scanner == nil {
 		cp.file, _ = os.Open(cp.path)
 		cp.scanner = bufio.NewScanner(cp.file)
 	}
 
 	if cp.scanner.Scan() {
-		line := cp.scanner.Bytes()
-		return &Strategy{
-			predicted: int(line[0]) - 64,
-			response:  int(line[2]) - 87,
+		cp.current = Strategy{
+			predicted: int(cp.scanner.Bytes()[0]) - 64,
+			response:  int(cp.scanner.Bytes()[2]) - 87,
 		}
+		return true
 	}
 
-	return nil
+	return false
 }
 
 type Challenge struct{}
@@ -48,11 +49,12 @@ func (c *Challenge) Part1() int {
 	defer cp.Close()
 
 	score := 0
+	var strategy *Strategy
 	for {
-		strategy := cp.Next()
-		if strategy == nil {
+		if !cp.Next() {
 			break
 		}
+		strategy = &cp.current
 
 		score += strategy.response
 
@@ -74,11 +76,12 @@ func (c *Challenge) Part2() int {
 	defer cp.Close()
 
 	score := 0
+	var strategy *Strategy
 	for {
-		strategy := cp.Next()
-		if strategy == nil {
+		if !cp.Next() {
 			break
 		}
+		strategy = &cp.current
 
 		switch strategy.response {
 		case 1:
