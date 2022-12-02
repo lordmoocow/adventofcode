@@ -9,8 +9,8 @@ import (
 )
 
 type Challenger interface {
-	Part1() (int, error)
-	Part2() (int, error)
+	Part1() int
+	Part2() int
 }
 
 var (
@@ -53,17 +53,9 @@ func run(day int) {
 
 	fmt.Printf("Day %v\r\n", day)
 
-	output, err := challenge.Part1()
-	check(err)
+	output := challenge.Part1()
 	fmt.Printf("  Part 1: %v\r\n", output)
 
-	output, err = challenge.Part2()
-	check(err)
+	output = challenge.Part2()
 	fmt.Printf("  Part 2: %v\r\n", output)
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

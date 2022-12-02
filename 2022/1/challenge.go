@@ -1,33 +1,86 @@
 package challenge
 
 import (
+	"bufio"
+	"bytes"
 	"os"
-	"sort"
 	"strconv"
-	"strings"
 )
 
-type Challenge struct{ }
-
-func parse() [][]int {
-	input, _ := os.ReadFile("./1/input")
-
-	groups := strings.Split(string(input), "\n\n")
-	elves := make([][]int, len(groups))
-	for i, group := range groups {
-		lines := strings.Split(group, "\n")
-		elves[i] = make([]int, len(lines))
-		for j, line := range lines {
-			elves[i][j], _ = strconv.Atoi(line)
-		}
-	}
-	return elves
+type ChallengeParser struct {
+	path string
+	initialised bool
+	file *os.File
+	scanner bufio.Scanner
+	buffer []int
 }
 
-func (c *Challenge) Part1() (int, error) {
-	elves := parse()
+func dropCR(data []byte) []byte {
+  if len(data) > 0 && data[len(data)-1] == '\r' {
+    return data[0 : len(data)-1]
+  }
+  return data
+}
+
+func (cp *ChallengeParser) Close() {
+	cp.file.Close()
+}
+
+func (cp *ChallengeParser) Next() []int {
+	if !cp.initialised {
+		cp.file,_ = os.OpenFile(cp.path, os.O_RDONLY, 0666)
+		cp.scanner = *bufio.NewScanner(cp.file)
+		cp.scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+			if atEOF && len(data) == 0 {
+				return 0, nil, nil
+			}
+			if i := bytes.Index(data, []byte{'\n','\n'}); i >= 0 {
+				return i + 2, dropCR(data[0:i]), nil
+			}
+			if atEOF {
+				return len(data), dropCR(data), nil
+			}
+			return 0, nil, nil
+		})
+		cp.buffer = make([]int, 0, 20)
+		cp.initialised = true
+	}
+
+	if cp.scanner.Scan() {
+		cp.buffer = cp.buffer[:0]
+		lines := cp.scanner.Bytes()
+		for {
+			if i := bytes.IndexByte(lines, '\n'); i >= 0 {
+				j, _ := strconv.Atoi(string(lines[:i]))
+				cp.buffer = append(cp.buffer, j)
+				lines = lines[i+1:]
+			} else {
+				i, _ := strconv.Atoi(string(lines))
+				cp.buffer = append(cp.buffer, i)
+				break
+			}
+		}
+		return cp.buffer
+	}
+
+	return nil
+}
+
+type Challenge struct{}
+
+func (c *Challenge) Part1() int {
+	cp := ChallengeParser{
+		path: "/workspaces/advent/2022/1/input",
+	}
+	defer cp.Close()
+
 	largest := 0
-	for _, elf := range elves {
+	for {
+		elf := cp.Next()
+		if elf == nil {
+			break
+		}
+
 		calories := 0
 		for _, c := range elf {
 			calories += c
@@ -37,27 +90,35 @@ func (c *Challenge) Part1() (int, error) {
 			largest = calories
 		}
 	}
-	return largest, nil
+	return largest
 }
 
-func (c *Challenge) Part2() (int, error) {
-	elves := parse()
-	totals := make([]int, len(elves))
-	for i, elf := range elves {
+func (c *Challenge) Part2() int {
+	cp := ChallengeParser{
+		path: "/workspaces/advent/2022/1/input",
+	}
+	defer cp.Close()
+
+	totals := make([]int, 3)
+	for {
+		elf := cp.Next()
+		if elf == nil {
+			break
+		}
+
 		calories := 0
 		for _, c := range elf {
 			calories += c
 		}
-		totals[i] = calories
+
+		if calories > totals[2] {
+			totals[0], totals[1], totals[2] = totals[1], totals[2], calories
+		} else if calories > totals[1] {
+			totals[0], totals[1] = totals[1], calories
+		} else if calories > totals[0] {
+			totals[0] = calories
+		}
 	}
 
-	sort.Slice(totals, func(i, j int) bool {
-		return totals[i] > totals[j]
-	})
-
-	sum := 0
-	for _, elf := range totals[:3] {
-		sum += elf
-	}
-	return sum, nil
+	return totals[0] + totals[1] + totals[2]
 }
