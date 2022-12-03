@@ -7,6 +7,7 @@ import (
 
 	day1 "github.com/lordmoocow/adventofcode/2022/1"
 	day2 "github.com/lordmoocow/adventofcode/2022/2"
+	day3 "github.com/lordmoocow/adventofcode/2022/3"
 )
 
 type Challenger interface {
@@ -50,6 +51,8 @@ func run(day int) {
 		challenge = &day1.Challenge{}
 	case 2:
 		challenge = &day2.Challenge{}
+	case 3:
+		challenge = &day3.Challenge{}
 	default:
 		return
 	}
