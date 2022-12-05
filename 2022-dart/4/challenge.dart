@@ -2,13 +2,15 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-void main() async {
+const path = '/workspaces/advent/2022-dart/4/input';
+
+void main() {
   part1();
   part2();
 }
 
 void part1() async {
-  final elves = File('/workspaces/advent/2022-dart/4/input')
+  final elves = File(path)
       .openRead()
       .transform(utf8.decoder)
       .transform(LineSplitter())
@@ -24,7 +26,7 @@ void part1() async {
 }
 
 void part2() async {
-  final elves = File('/workspaces/advent/2022-dart/4/input')
+  final elves = File(path)
       .openRead()
       .transform(utf8.decoder)
       .transform(LineSplitter())
