@@ -9,25 +9,41 @@ void main() async {
 }
 
 void part1() async {
-  var crates = await parseCrates();
+  final stacks = await parseCrates();
 
-  final moves = File('/workspaces/adventofcode/2022-dart/5/testinput')
-      .openRead()
-      .transform(utf8.decoder)
-      .transform(LineSplitter())
-      .transform(CraneMoveParser());
-
-  await for (var move in moves) {
-    print('move ${move.amount} from ${move.source} to ${move.target}');
-    for (var crate in crates[move.source - 1].stack.take(move.amount)) {
-      crates[move.target - 1].stack.add(crate);
+  await for (var move in parseMoves()) {
+    for (var i = 0; i < move.amount; i++) {
+      stacks[move.target]
+          .stack
+          .addFirst(stacks[move.source].stack.removeFirst());
     }
   }
-  print('Part 1: 0');
+
+  var message = List<int>.empty(growable: true);
+  for (var s in stacks) {
+    message.add(s.stack.first);
+  }
+  print("Part 1: ${utf8.decode(message)}");
 }
 
 void part2() async {
-  print('Part 2: 0');
+  final stacks = await parseCrates();
+
+  await for (var move in parseMoves()) {
+    var moving = List<int>.empty(growable: true);
+    for (var i = 0; i < move.amount; i++) {
+      moving.add(stacks[move.source].stack.removeFirst());
+    }
+    for (var crate in moving.reversed) {
+      stacks[move.target].stack.addFirst(crate);
+    }
+  }
+
+  var message = List<int>.empty(growable: true);
+  for (var s in stacks) {
+    message.add(s.stack.first);
+  }
+  print("Part 2: ${utf8.decode(message)}");
 }
 
 class Stack {
@@ -45,7 +61,7 @@ class CraneMove {
 }
 
 Future<List<Stack>> parseCrates() async {
-  final lines = File('/workspaces/adventofcode/2022-dart/5/testinput')
+  final lines = File('/workspaces/advent/2022-dart/5/input')
       .openRead()
       .transform(utf8.decoder)
       .transform(LineSplitter());
@@ -57,16 +73,26 @@ Future<List<Stack>> parseCrates() async {
     }
 
     var chars = line.codeUnits;
-    for (var i = 0; i < chars.length; i += 4) {
-      if (stacks.length <= i % 3) {
+    for (var i = 0; i < ((chars.length + 1) / 4); i++) {
+      while (stacks.length < i + 1) {
         stacks.add(Stack(Queue()));
       }
-      if (chars[i + 1] != 32 && chars[i + 1] > 64) {
-        stacks[i % 3].stack.add(chars[i + 1]);
+
+      var c = chars[(1 + i * 4)];
+      if (c != 32 && c > 64) {
+        stacks[i].stack.add(c);
       }
     }
   }
   return stacks;
+}
+
+Stream<CraneMove> parseMoves() {
+  return File('/workspaces/advent/2022-dart/5/input')
+      .openRead()
+      .transform(utf8.decoder)
+      .transform(LineSplitter())
+      .transform(CraneMoveParser());
 }
 
 class CraneMoveParser extends StreamTransformerBase<String, CraneMove> {
@@ -76,7 +102,8 @@ class CraneMoveParser extends StreamTransformerBase<String, CraneMove> {
       if (value.startsWith("move")) {
         final s = value.split(' ');
         if (s.length == 6) {
-          yield CraneMove(int.parse(s[1]), int.parse(s[3]), int.parse(s[5]));
+          yield CraneMove(
+              int.parse(s[1]), int.parse(s[3]) - 1, int.parse(s[5]) - 1);
         }
       }
     }
