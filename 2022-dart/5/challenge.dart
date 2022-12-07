@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-const path = '/workspaces/advent/2022-dart/5/input';
+const path = './5/input';
 
 void main() {
   part1();

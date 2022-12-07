@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 
-const path = '/workspaces/advent/2022-dart/6/input';
+const path = './6/input';
 
 void main() {
   part1();
