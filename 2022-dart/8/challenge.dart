@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:convert';
 
-const path = './8/testinput';
+const path = './8/input';
 
 void main() {
   part1();
@@ -28,91 +28,149 @@ void part1() async {
   final maxX = trees[0].length;
   final maxY = trees.length;
 
-  List<List<bool>> checked = List.filled(maxY, List.filled(maxX, false));
+  // just for debugging - or maybe not actually
+  final visualise = List.generate(maxY, (_) => List.generate(maxY, (_) => 0));
 
-  Queue<List<int>> tocheck = Queue();
-
-  // Start from middle tree in all directions
-  tocheck.add([(maxX / 2).round() - 1, (maxY / 2).round() - 1]);
-
-  // Look out in each direction to find a tree that blocks the current tree
-  // add it to the list of trees to check
-  // keep doing this and tot up the ones which don't have anything blocking it
-  // pray that it works - it didn't
-  while (tocheck.isNotEmpty) {
-    final tree = tocheck.removeFirst();
-    final x = tree[1];
-    final y = tree[0];
-
-    if (checked[y][x]) continue;
-
-    checked[y][x] = true;
-    print("$tree: ${utf8.decode([trees[y][x]])}");
-
-    var visible = false;
-
-    if (x == 0 || x == maxX - 1 || y == 0 || y == maxY - 1) {
-      visible = true;
-    }
-
-    // look right?
-    for (var i = 1; x + i < maxX; i++) {
-      if (trees[y][x + i] >= trees[y][x + i]) {
-        if (!checked[y][x + i]) {
-          tocheck.add([y, x + i]);
-        }
-        break;
+  for (var row = 0; row < maxY; row++) {
+    for (var col = 0; col < maxX; col++) {
+      // edges always visible
+      if (row == 0 || row == maxY - 1 || col == 0 || col == maxY - 1) {
+        count++;
+        visualise[row][col] = trees[row][col] - 48;
+        continue;
       }
-      visible = true;
-    }
 
-    // look down?
-    for (var i = 1; y + i < maxY; i++) {
-      if (trees[y + i][x] >= trees[y + i][x]) {
-        if (!checked[y + i][x]) {
-          tocheck.add([y + i, x]);
+      var r = false;
+      var l = false;
+      var u = false;
+      var d = false;
+
+      // check if the right is blocked
+      for (var x = col + 1; x < maxX; x++) {
+        if (trees[row][x] >= trees[row][col]) {
+          r = true;
+          break;
         }
-        break;
       }
-      visible = true;
-    }
-
-    // look left?
-    for (var i = 1; x - i > 0; i++) {
-      if (trees[y][x - i] >= trees[y][x - i]) {
-        if (!checked[y][x - i]) {
-          tocheck.add([y, x - i]);
+      // check if the left is blocked
+      for (var x = col - 1; x >= 0; x--) {
+        if (trees[row][x] >= trees[row][col]) {
+          l = true;
+          break;
         }
-        break;
       }
-      visible = true;
-    }
-
-    // look up?
-    for (var i = 1; y - i > 0; i++) {
-      if (trees[y - i][x] >= trees[y - i][x]) {
-        if (!checked[y - i][x]) {
-          tocheck.add([y - i, x]);
+      // check if the below is blocked
+      for (var y = row + 1; y < maxY; y++) {
+        if (trees[y][col] >= trees[row][col]) {
+          d = true;
+          break;
         }
-        break;
       }
-      visible = true;
-    }
+      // check if the above is blocked
+      for (var y = row - 1; y >= 0; y--) {
+        if (trees[y][col] >= trees[row][col]) {
+          u = true;
+          break;
+        }
+      }
 
-    if (visible) {
-      count++;
+      if (!(r && l && u && d)) {
+        count++;
+        visualise[row][col] = trees[row][col] - 48;
+      }
     }
-
-    for (final line in checked) {
-      print("${line}");
-    }
-    for (final line in tocheck) {
-      print("${line}");
-    }
-    break;
   }
 
+  // for (final row in visualise) {
+  //   print("$row");
+  // }
   print("Part 1: $count");
 }
 
-void part2() async {}
+void part2() async {
+  final trees = await File(path)
+      .openRead()
+      .transform(utf8.decoder)
+      .transform(LineSplitter())
+      .transform(
+          StreamTransformer<String, List<int>>.fromBind(((stream) async* {
+    await for (final line in stream) {
+      yield line.runes.toList();
+    }
+  }))).toList();
+
+  var maxScore = 0;
+
+  // bounds
+  final maxX = trees[0].length;
+  final maxY = trees.length;
+
+  // just for debugging - or maybe not actually
+  final visualise = List.generate(maxY, (_) => List.generate(maxY, (_) => 0));
+
+  for (var row = 0; row < maxY; row++) {
+    for (var col = 0; col < maxX; col++) {
+      if (row == 0 || row == maxY - 1 || col == 0 || col == maxY - 1) {
+        visualise[row][col] = 0;
+        continue;
+      }
+
+      var score = 0;
+
+      // right
+      var count = 0;
+      for (var x = col + 1; x < maxX; x++) {
+        count++;
+        if (trees[row][x] < trees[row][col]) {
+          continue;
+        }
+        break;
+      }
+      score = count;
+
+      // left
+      count = 0;
+      for (var x = col - 1; x >= 0; x--) {
+        count++;
+        if (trees[row][x] < trees[row][col]) {
+          continue;
+        }
+        break;
+      }
+      score *= count;
+
+      // down
+      count = 0;
+      for (var y = row + 1; y < maxY; y++) {
+        count++;
+        if (trees[y][col] < trees[row][col]) {
+          continue;
+        }
+        break;
+      }
+      score *= count;
+
+      // up
+      count = 0;
+      for (var y = row - 1; y >= 0; y--) {
+        count++;
+        if (trees[y][col] < trees[row][col]) {
+          continue;
+        }
+        break;
+      }
+      score *= count;
+
+
+      visualise[row][col] = score;
+      if (score > maxScore) {
+        maxScore = score;
+      }
+    }
+  }
+
+  // for (final row in visualise) {
+  //   print("$row");
+  // }
+  print("Part 1: $maxScore");
+}
